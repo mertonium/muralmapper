@@ -65,7 +65,7 @@ function base58_decode(num) {
 setInterval(function() {
 
 	// At the begining of each poll, get the ID of the last doc inserted.
-	db.all({descending: true, limit: 1, skip: 1}, function(err, res) {		
+	db.view('muralmapper/tweetid',{descending: true, limit: 1}, function(err, res) {		
 		if(err) {
 			sys.puts('Could not fetch last document ID. Unable to poll Twitter API. ' + err.reason);
 		}		
