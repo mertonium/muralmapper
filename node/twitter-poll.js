@@ -3,7 +3,7 @@
  */
 
 // Include required modules
-var sys = require('sys');
+var sys = require('util');
 var http = require('http');
 var twitter = require('twitter');
 var cradle = require('cradle');
@@ -32,15 +32,15 @@ var db = new (cradle.Connection)(config.couchdb.host, config.couchdb.port, {
 
 // From http://www.simonwhatley.co.uk/examples/twitter/prototype/
 String.prototype.pull_url = function() {
-    if(this.indexOf('yfrog') != -1) {
+  if(this.indexOf('yfrog') != -1) {
     return  'http://'+this.match(/yfrog.com\/[A-Za-z0-9-_]+/g, function(url) {
       return url;
     });
   } else {
-        return this.match(/[A-Za-z]+:\/\/[A-Za-z0-9-_]+\.[A-Za-z0-9-_:%&~\?\/.=]+/g, function(url) {
-          return url;
-        });
-    }
+    return this.match(/[A-Za-z]+:\/\/[A-Za-z0-9-_]+\.[A-Za-z0-9-_:%&~\?\/.=]+/g, function(url) {
+      return url;
+    });
+  }
 };
 
 // Function to decode flic.kr urls
@@ -52,10 +52,10 @@ function base58_decode(num) {
     var digit;
 
     while(num.length > 0) {
-        digit =num[num.length - 1];
-        decoded += multi * alpha.indexOf(digit);
-        multi = multi * alpha.length;
-        num = num.slice(0, -1);
+      digit =num[num.length - 1];
+      decoded += multi * alpha.indexOf(digit);
+      multi = multi * alpha.length;
+      num = num.slice(0, -1);
     }
 
     return decoded;
@@ -68,17 +68,15 @@ setInterval(function() {
   db.view('muralmapper/tweetid',{descending: true, limit: 1}, function(err, res) {
     if(err) {
       sys.puts('Could not fetch last document ID. Unable to poll Twitter API. ' + err.reason);
-    }
-    else {
+    } else {
 
       // Use the last document ID to refine twitter API call (if no docs exist, just use an arbitrary low number).
       var since_id = res.length == 0 ? 10000 : res[0].id;
 
-console.log(since_id);
+      console.log("Document ID of last downloaded tweet: "+since_id);
       twit.get('/statuses/mentions.json?include_entities=true&since_id=' + since_id, function(data) {
-//console.log(data);
 
-          if(data.statusCode == 400) console.log(data.data.error);
+        if(data.statusCode == 400) console.log(data.data.error);
 
         // Iterate over returned mentions and store in CouchDB.
         for ( var i = 0; i < data.length; i++) {
@@ -96,45 +94,40 @@ console.log(since_id);
           if(data[i].entities && data[i].entities.media) {
               data[i].tweet_image = data[i].entities.media[0].media_url;
           } else {
-                        // If the image url has been shortened by twitter, we need to get the
-                        // expanded url.
-              var img_urls = (data[i].entities && data[i].entities.urls && data[i].entities.urls[0].expanded_url) ?
-                  data[i].entities.urls[0].expanded_url : data[i].text.pull_url();
+            // If the image url has been shortened by twitter, we need to get the
+            // expanded url.
+            var img_urls = (data[i].entities && data[i].entities.urls && data[i].entities.urls[0].expanded_url) ? data[i].entities.urls[0].expanded_url : data[i].text.pull_url();
 
-console.log(img_urls);
-                        data[i].tweet_image = '';
-                        if(img_urls.length > 0) {
-                            cur_url = (typeof(img_urls) == 'string') ? img_urls : img_urls[0];
-                            if(cur_url.toLowerCase().indexOf('twitpic') != -1) {
-                                internal_id = cur_url.split('/').pop();
-                                data[i].tweet_image = 'http://twitpic.com/show/full/'+internal_id;
-    console.log('twitpic');
-                            } else if(cur_url.toLowerCase().indexOf('yfrog') != -1) {
-                                //internal_id = cur_url.split('/').pop();
-                                data[i].tweet_image = cur_url+':iphone';
-    console.log('yfrog');
-                            } else if(cur_url.toLowerCase().indexOf('lockerz') != -1) {
-    console.log('lockerz');
-                                data[i].tweet_image = 'http://api.plixi.com/api/tpapi.svc/imagefromurl?url='+cur_url+'&size=mobile';
-                            } else if(cur_url.toLowerCase().indexOf('flic.kr') != -1) {
-    console.log('flickr');
-                                data[i].tweet_image = '';
-                            }
-                        }
-                    }
-console.log(data[i]);
+            console.log(img_urls);
+            data[i].tweet_image = '';
+            if(img_urls.length > 0) {
+              cur_url = (typeof(img_urls) == 'string') ? img_urls : img_urls[0];
+              if(cur_url.toLowerCase().indexOf('twitpic') != -1) {
+                console.log('Photo from twitpic.');
+                internal_id = cur_url.split('/').pop();
+                data[i].tweet_image = 'http://twitpic.com/show/full/'+internal_id;
+              } else if(cur_url.toLowerCase().indexOf('yfrog') != -1) {
+                console.log('Photo from yfrog');  
+                data[i].tweet_image = cur_url+':iphone';
+              } else if(cur_url.toLowerCase().indexOf('lockerz') != -1) {
+                console.log('Photo from lockerz');
+                data[i].tweet_image = 'http://api.plixi.com/api/tpapi.svc/imagefromurl?url='+cur_url+'&size=mobile';
+              } else if(cur_url.toLowerCase().indexOf('flic.kr') != -1) {
+                console.log('Photo from flickr');
+                data[i].tweet_image = '';
+              }
+            }
+          }
+          console.log(data[i]);
           db.save('' + data[i].id, data[i], function(err, res) {
             if (err) {
-              sys.puts('Could not save document with id ' + data[i].id
-                  + '. ' + err.reason);
+              sys.puts('Could not save document with id ' + data[i].id + '. ' + err.reason);
             } else {
-              sys.puts('Saved document with id ' + res.id + '. Rev ID: '
-                  + res.rev);
+              sys.puts('Saved document with id ' + res.id + '. Rev ID: ' + res.rev);
             }
           });
         }
       });
     }
   });
-
 }, config.timers.interval);
