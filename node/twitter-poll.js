@@ -73,12 +73,12 @@ setInterval(function() {
       // Use the last document ID to refine twitter API call (if no docs exist, just use an arbitrary low number).
       var since_id = res.length == 0 ? 10000 : res[0].id;
 
-      console.log("Document ID of last downloaded tweet: "+since_id);
+      console.warn("Document ID of last downloaded tweet: "+since_id);
       twit.get('/statuses/mentions.json?include_entities=true&since_id=' + since_id, function(data) {
 
-        if(data.statusCode == 400) console.log(data.data.error);
+        if(data.statusCode == 400) console.warn(data.data.error);
         var i = 0;
-        console.log("Found "+data.length+" tweets.");
+        console.warn("Found "+data.length+" tweets.");
         // Iterate over returned mentions and store in CouchDB.
         for (; i < data.length; i+=1) {
 
@@ -100,28 +100,28 @@ setInterval(function() {
               // expanded url.
               var img_urls = (data[i].entities && data[i].entities.urls && data[i].entities.urls[0].expanded_url) ? data[i].entities.urls[0].expanded_url : data[i].text.pull_url();
 
-              console.log(img_urls);
+              console.warn(img_urls);
               data[i].tweet_image = '';
               if(img_urls.length > 0) {
                 cur_url = (typeof(img_urls) == 'string') ? img_urls : img_urls[0];
                 if(cur_url.toLowerCase().indexOf('twitpic') != -1) {
-                  console.log('Photo from twitpic.');
+                  console.warn('Photo from twitpic.');
                   internal_id = cur_url.split('/').pop();
                   data[i].tweet_image = 'http://twitpic.com/show/full/'+internal_id;
                 } else if(cur_url.toLowerCase().indexOf('yfrog') != -1) {
-                  console.log('Photo from yfrog');  
+                  console.warn('Photo from yfrog');  
                   data[i].tweet_image = cur_url+':iphone';
                 } else if(cur_url.toLowerCase().indexOf('lockerz') != -1) {
-                  console.log('Photo from lockerz');
+                  console.warn('Photo from lockerz');
                   data[i].tweet_image = 'http://api.plixi.com/api/tpapi.svc/imagefromurl?url='+cur_url+'&size=mobile';
                 } else if(cur_url.toLowerCase().indexOf('flic.kr') != -1) {
-                  console.log('Photo from flickr');
+                  console.warn('Photo from flickr');
                   data[i].tweet_image = '';
                 }
               }
             }
           }
-          console.log(data[i]);
+          console.warn(data[i]);
           db.save('' + data[i].id, data[i], function(err, res) {
             if (err) {
               sys.puts('Could not save document with id ' + data[i].id + '. ' + err.reason);
