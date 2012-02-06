@@ -9,11 +9,10 @@
     "url" : "git://github.com/codeforamerica/muralmapper.git"
   },
   "engines" : {
-    "node" : "v0.4.4 || v0.4.5 || v0.4.6 || v0.4.7"
+    "node" : "v0.4.4 || v0.4.5 || v0.4.6 || v0.4.7 || v0.6"
   },
   "dependencies": {
-    "cradle" : "0.5.5",
-    "supervisor" : "0.1.2",
+    "cradle" : "0.5.8",
     "twitter" : "0.1.17"
   }
 }
