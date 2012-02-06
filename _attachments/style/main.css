@@ -8,68 +8,66 @@ body {
 }
 
 a {
-    color: #ccc;
+  color: #ccc;
 }
 
 p { 
-    color: #efefef;
+  color: #efefef;
 }
 
 h2 {
-    margin: 0 0 5px 0;
-    font-size: 1.8em;
-    color: #efefef;
+  margin: 0 0 5px 0;
+  font-size: 1.8em;
+  color: #efefef;
 }
 
 #content {
-    margin: 0 auto;
-    width: ;
+  margin: 0 auto;
+  width: ;
 }
 
 #muralmap {
-	width: 90%;
-	height: 550px;
-  	border: 1px solid #cccccc;
-	margin-top: 5px;
-	margin-bottom: 5px;
+  width: 90%;
+  height: 550px;
+  border: 1px solid #cccccc;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 #thumb {
-	float: left;
-	width: 48px;
-	height: 48px;	
+  float: left;
+  width: 48px;
+  height: 48px; 
 }
 
 #tweet {
-	float: right;	
+  float: right; 
 }
 
 .bubble_details {
-    clear: left;
-    width: 300px;
+  clear: left;
+  width: 300px;
 }
 
-.bubble_details .bubble_img_container {
-}
 .bubble_details .bubble_img {
-    width: 300px;
-    height: 200px;
+  width: 300px;
+  height: 200px;
 }
 
 .bubble_details .bubble_profile {
-    float:left; 
-    width:60px; 
-    padding-right:5px; 
-    font-size:12px; 
-    font-style: italic;
+  float:left; 
+  width:60px; 
+  padding-right:5px; 
+  font-size:12px; 
+  font-style: italic;
 }
 
 .bubble_details .bubble_text {
-    text-align: left;
-    font-size: 12px;
+  text-align: left;
+  font-size: 12px;
 }
 .bubble_details .bubble_text  a {
-    color:#333;
+  color:#333;
 }
 
 #demo { cursor: pointer; text-decoration: underline; }
