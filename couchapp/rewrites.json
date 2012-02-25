@@ -18,5 +18,9 @@
   {
     "to": "index.html",
     "from": ""
+  },
+  {
+    "from":"_design/*",
+    "to":"../../_design/*"
   }
 ]
