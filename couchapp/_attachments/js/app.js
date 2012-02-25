@@ -103,7 +103,7 @@ $.couch.app(function(app) {
       }
     }
   }
-});
+}, { design: 'muralmapper' });
 
 // Extra helper functions that we'll just hang off of the String object
 String.prototype.parseURL = function() {
