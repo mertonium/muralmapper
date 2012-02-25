@@ -4,6 +4,10 @@
     "from": "style/*"
   },
   {
+    "to": "js/*",
+    "from": "js/*"
+  },
+  {
     "to":"vendor/*",
     "from":"vendor/*"
   },
