@@ -24,7 +24,8 @@ $.couch.app(function(app) {
   updateMarkers();
 
   // Demo click handler
-  $('#demo').click(function() {
+  $('#demo').click(function(ev) {
+    ev.preventDefault();
     clearMarkers();
     updateMarkers(true);
   });
