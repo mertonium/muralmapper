@@ -9,6 +9,7 @@ var twitter = require('twitter');
 var cradle = require('cradle');
 var config = require('./config');
 
+console.log(config);
 // Last ditch hander for an exception.
 process.on('uncaughtException', function (err) {
   sys.puts('An unhandled exception occurred: ' + err);
@@ -29,6 +30,14 @@ var db = new (cradle.Connection)(config.couchdb.host, config.couchdb.port, {
     password : config.couchdb.password
   }
 }).database(config.couchdb.dbname);
+
+// Create new connection to the public_art CouchDB instance.
+var db2 = new (cradle.Connection)(config.couchdb2.host, config.couchdb2.port, {
+  auth : {
+    username : config.couchdb2.userid,
+    password : config.couchdb2.password
+  }
+}).database(config.couchdb2.dbname);
 
 // From http://www.simonwhatley.co.uk/examples/twitter/prototype/
 String.prototype.pull_url = function() {
@@ -61,6 +70,44 @@ function base58_decode(num) {
   return decoded;
 }
 
+function transform_tweet(tweet) {
+  // {
+  //   "_id" : "public_art_finder_template",
+  //   "title" : "[string] - title of the piece of art",
+  //   "artist" : "[string] - name of the artist(s), we'll need a way of normalizing this",
+  //   "description" : "[string] - description of work, artist statement, notes, etc.",
+  //   "discipline" : "[string] - preferably one of the following: sculpture, painting, photography, ceramics, fiber, architectural integration, mural, fountain, other",
+  //   "location_description" : "[string] - human readable location ",
+  //   "full_address" : "[string] - full street address, w/ city, state, zip if possible",
+  //   "geometry" : "[object] - latitude/longitude in geojson point format",
+  //   "image_urls" : "[string] - This will be a comma delimited list of urls to remote images.  The other option for images is to make them attachments to the document.  I think we should accept both.",
+  //   "data_source" : "[string] - the source of the data. (i.e. 'San Francisco Arts Commission')",
+  //   "doc_type" : "[string] - this field is used by the app and should always be set to 'artwork'"
+  // }
+  var t = {}, 
+      handle_regex = /^\@PublicArtApp/g, 
+      link_regex = /http\:\/\/.*$/g;
+  
+  t._id = ''+tweet.id;
+  t.title = '';
+  t.artist = '';
+
+  t.description = tweet.text;
+  t.description = t.description.replace(handle_regex, '');
+  t.description = t.description.replace(link_regex, '');
+  
+  t.discipline = '';
+  t.location_description = (tweet.place.full_name) ? tweet.place.full_name : '';
+  t.full_address = t.location_description;
+  t.geometry = tweet.geo;
+  t.image_urls = [tweet.tweet_image];
+  t.data_source = 'Twitter';
+  t.doc_type = 'artwork';
+  t.twitterer = tweet.user.screen_name;
+  
+  return t;
+}
+
 // At a set interval, fetch all mentions
 setInterval(function() {
 
@@ -77,7 +124,7 @@ setInterval(function() {
       twit.get('/statuses/mentions.json?include_entities=true&since_id=' + since_id, function(data) {
 
         if(data.statusCode == 400) console.warn(data.data.error);
-        var i = 0;
+        var i = 0, translated_obj;
         console.warn("Found "+data.length+" tweets.");
         // Iterate over returned mentions and store in CouchDB.
         for (; i < data.length; i+=1) {
@@ -127,6 +174,18 @@ setInterval(function() {
               sys.puts('Could not save document with id ' + data[i].id + '. ' + err.reason);
             } else {
               sys.puts('Saved document with id ' + res.id + '. Rev ID: ' + res.rev);
+            }
+          });
+          
+          transformed_tweet = transform_tweet(data[i]);
+          console.warn('====== Transformed tweet ======');
+          console.warn(transformed_tweet);
+          console.warn('===============================');
+          db2.save('' + transformed_tweet._id + '', transformed_tweet, function(err, res) {
+            if (err) {
+              sys.puts('Could not save document in the tweet db with id ' + data[i].id + '. ' + err.reason);
+            } else {
+              sys.puts('Saved document in the tweet db with id ' + res.id + '. Rev ID: ' + res.rev);
             }
           });
         }
